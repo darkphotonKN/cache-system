@@ -2,39 +2,21 @@ package main
 
 import (
 	"fmt"
-	"net"
+	"github.com/darkphotonKN/cache-system/internal/server"
+	"log"
 )
 
-const defaultListenAddr = ":5000"
+func main() {
+	port := ":5100"
 
-type Config struct {
-	ListenAddr string
-}
+	cfg := server.Config{ListenAddr: port}
+	s := server.NewServer(cfg)
 
-type Server struct {
-	Config
-	ln net.Listener
-}
-
-func NewServer(cfg Config) *Server {
-	if len(cfg.ListenAddr) == 0 {
-		// default to default listen address
-		cfg.ListenAddr = defaultListenAddr
-	}
-
-	listener, err := net.Listen("tcp", cfg.ListenAddr)
+	err := s.StartServer()
 
 	if err != nil {
-		fmt.Printf("Error when attempging to create listener: %s", err)
+		log.Fatal("Error when attmepting to startup server.")
 	}
 
-	return &Server{
-		Config: cfg,
-		ln:     listener,
-	}
-}
-
-func main() {
-
-	fmt.Println("Running")
+	fmt.Printf("Server is running on port %s\n", port)
 }
