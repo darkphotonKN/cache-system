@@ -19,4 +19,7 @@ func main() {
 	}
 
 	fmt.Printf("Server is running on port %s\n", port)
+
+	// block until channels are set up
+	select {}
 }

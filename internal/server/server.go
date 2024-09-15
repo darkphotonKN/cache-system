@@ -3,11 +3,12 @@ package server
 import (
 	"fmt"
 	"net"
+
+	peermanager "github.com/darkphotonKN/cache-system/internal/peer-manager"
 )
 
 const (
 	defaultListenAddr = ":5000"
-	readSizeLimit     = 2048
 )
 
 type Config struct {
@@ -16,19 +17,21 @@ type Config struct {
 
 type Server struct {
 	Config
-	ln    net.Listener
-	stuff string
+	ln net.Listener
+	*peermanager.PeerManager
 }
 
 func NewServer(cfg Config) *Server {
-
 	if len(cfg.ListenAddr) == 0 {
 		// default to default listen address
 		cfg.ListenAddr = defaultListenAddr
 	}
 
+	pm := peermanager.NewPeerManager()
+
 	return &Server{
-		Config: cfg,
+		Config:      cfg,
+		PeerManager: pm,
 	}
 }
 
@@ -56,23 +59,10 @@ func (s *Server) connectionLoop() {
 			continue
 		}
 
+		// pass new peer connection to add them to the peers map
+		s.AddPeer(conn)
+
 		// start read-loop goroutines for each connection
-
-		go s.readLoop(conn)
-	}
-}
-
-func (s *Server) readLoop(conn net.Conn) {
-
-	for {
-		buf := make([]byte, readSizeLimit)
-
-		_, err := conn.Read(buf)
-
-		if err != nil {
-			fmt.Println("Error when reading message:", err)
-			continue
-		}
-
+		go s.ReadLoop(conn)
 	}
 }
