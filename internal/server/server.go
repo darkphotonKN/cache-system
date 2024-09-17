@@ -29,6 +29,9 @@ func NewServer(cfg Config) *Server {
 
 	pm := peermanager.NewPeerManager()
 
+	// start go routine to listen for peer channel setups
+	go pm.AcceptLoop()
+
 	return &Server{
 		Config:      cfg,
 		PeerManager: pm,
@@ -60,7 +63,12 @@ func (s *Server) connectionLoop() {
 		}
 
 		// pass new peer connection to add them to the peers map
-		s.AddPeer(conn)
+		peer := peermanager.Peer{
+			Conn: conn,
+		}
+
+		// send to add peer channel
+		s.AddPeerChan <- &peer
 
 		// start read-loop goroutines for each connection
 		go s.ReadLoop(conn)

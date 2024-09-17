@@ -10,12 +10,13 @@ const (
 )
 
 type Peer struct {
-	conn net.Conn
+	Conn net.Conn
 }
 
 type PeerManager struct {
-	peers       map[*Peer]bool
-	addPeerChan chan *Peer
+	peers map[*Peer]bool
+	// for notifying
+	AddPeerChan chan *Peer
 }
 
 func NewPeerManager() *PeerManager {
@@ -24,15 +25,26 @@ func NewPeerManager() *PeerManager {
 
 	return &PeerManager{
 		peers:       peers,
-		addPeerChan: addPeerChan,
+		AddPeerChan: addPeerChan,
 	}
 }
 
 func (pm *PeerManager) AddPeer(conn net.Conn) {
 	peer := Peer{
-		conn: conn,
+		Conn: conn,
 	}
 	pm.peers[&peer] = true
+}
+
+func (pm *PeerManager) AcceptLoop() {
+	for {
+		select {
+		case peer := <-pm.AddPeerChan:
+			fmt.Println("Reading in new peer.")
+			pm.peers[peer] = true
+		default:
+		}
+	}
 }
 
 func (pm *PeerManager) ReadLoop(conn net.Conn) {
