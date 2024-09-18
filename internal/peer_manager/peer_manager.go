@@ -12,15 +12,16 @@ const (
 type Peer struct {
 	Conn net.Conn
 }
+type PeerList map[*Peer]bool
 
 type PeerManager struct {
-	peers map[*Peer]bool
+	peers PeerList
 	// for notifying
 	AddPeerChan chan *Peer
 }
 
 func NewPeerManager() *PeerManager {
-	peers := make(map[*Peer]bool)
+	peers := make(PeerList)
 	addPeerChan := make(chan *Peer)
 
 	return &PeerManager{
@@ -45,6 +46,10 @@ func (pm *PeerManager) AcceptLoop() {
 		default:
 		}
 	}
+}
+
+func (pm *PeerManager) GetPeers() PeerList {
+	return pm.peers
 }
 
 func (pm *PeerManager) ReadLoop(conn net.Conn) {

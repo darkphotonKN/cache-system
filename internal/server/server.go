@@ -3,8 +3,9 @@ package server
 import (
 	"fmt"
 	"net"
+	"time"
 
-	peermanager "github.com/darkphotonKN/cache-system/internal/peer-manager"
+	peermanager "github.com/darkphotonKN/cache-system/internal/peer_manager"
 )
 
 const (
@@ -29,9 +30,6 @@ func NewServer(cfg Config) *Server {
 
 	pm := peermanager.NewPeerManager()
 
-	// start go routine to listen for peer channel setups
-	go pm.AcceptLoop()
-
 	return &Server{
 		Config:      cfg,
 		PeerManager: pm,
@@ -47,6 +45,20 @@ func (s *Server) StartServer() error {
 		return err
 	}
 
+	// CHECK PEER LIST - TODO: Remove after testing
+	go func() {
+		ticker := time.NewTicker(time.Second * 10)
+
+		defer ticker.Stop()
+
+		for range ticker.C {
+			fmt.Println("Peer list:", s.GetPeers())
+		}
+	}()
+
+	// start accept loop for peers
+	go s.AcceptLoop()
+	// start go routine to listen for peer channel setups
 	go s.connectionLoop()
 
 	return nil
